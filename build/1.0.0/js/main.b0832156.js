@@ -1,0 +1,1 @@
+(()=>{const e=document.createElement("div");e.innerHTML=new Array(10).fill(1).map(((e,n)=>`Hello ${n+1}`)).join("<br/>"),document.body.append(e)})();
