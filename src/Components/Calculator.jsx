@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-// import './calculator.css';
 
 const Calculator = () => {
   let [result, setResult] = useState("");
@@ -26,7 +25,7 @@ const Calculator = () => {
     try {
       result=eval(result).toString()
       if(result.includes('.')){
-        result=+ eval(result);
+        result += eval(result);
         result=result.toFixed(4).toString();
         setResult(result);
       }else{
