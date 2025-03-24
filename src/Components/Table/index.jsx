@@ -1,55 +1,7 @@
 import * as React from 'react';
-import {useMemo} from 'react';
+import {useMemo, useEffect} from 'react';
 import {MantineReactTable, useMantineReactTable} from 'mantine-react-table';
 import {Menu} from '@mantine/core';
-
-const data = [
-    {
-        name: {
-            firstName: 'Zachary',
-            lastName: 'Davis',
-        },
-        address: '261 Battle Ford',
-        city: 'Columbus',
-        state: 'Ohio',
-    },
-    {
-        name: {
-            firstName: 'Robert',
-            lastName: 'Smith',
-        },
-        address: '566 Brakus Inlet',
-        city: 'Westerville',
-        state: 'West Virginia',
-    },
-    {
-        name: {
-            firstName: 'Kevin',
-            lastName: 'Yan',
-        },
-        address: '7777 Kuhic Knoll',
-        city: 'South Linda',
-        state: 'West Virginia',
-    },
-    {
-        name: {
-            firstName: 'John',
-            lastName: 'Upton',
-        },
-        address: '722 Emie Stream',
-        city: 'Huntington',
-        state: 'Washington',
-    },
-    {
-        name: {
-            firstName: 'Nathan',
-            lastName: 'Harris',
-        },
-        address: '1 Kuhic Knoll',
-        city: 'Ohiowa',
-        state: 'Nebraska',
-    },
-];
 
 const Table = () => {
     const [columnPinning, setColumnPinning] = React.useState({
@@ -57,28 +9,45 @@ const Table = () => {
         right: ['mrt-row-actions'],
     });
 
+    const [data, setData] = React.useState([]);
+
+    const getSlates = async () => {
+        fetch('https://api.dev.slatepages.com/v2.0/accounts/uGyKPHUFeUiTK8WsJX83jg/views/ADQdjL0uSj6Bn4AjPK_Gyg/slates', {
+            method: 'GET',
+            credentials: "same-origin"
+        })
+            .then((response) => response.json())
+            .then((json) => {
+                setData(json.data.data.map(({slateUUID, columns}) => {
+                    return {
+                        uuid: slateUUID,
+                        slate_title: columns[0].value,
+                        boolean: columns[1].value.toString(),
+                    }
+                }))
+            }).catch(() => {
+        });
+    }
+
+    useEffect(() => {
+        getSlates()
+    }, []);
+
+
     //should be memoized or stable
     const columns = useMemo(
         () => [
             {
-                accessorKey: 'name.firstName', //access nested data with dot notation
-                header: 'First Name',
+                accessorKey: 'uuid', //access nested data with dot notation
+                header: 'Uuid',
             },
             {
-                accessorKey: 'name.lastName',
-                header: 'Last Name',
+                accessorKey: 'slate_title',
+                header: 'Slate Title',
             },
             {
-                accessorKey: 'address', //normal accessorKey
-                header: 'Address',
-            },
-            {
-                accessorKey: 'city',
-                header: 'City',
-            },
-            {
-                accessorKey: 'state',
-                header: 'State',
+                accessorKey: 'boolean', //normal accessorKey
+                header: 'Boolean',
             },
         ],
         [],
@@ -97,12 +66,19 @@ const Table = () => {
         onColumnPinningChange: setColumnPinning,
         renderRowActionMenuItems: () => (
             <>
-                <Menu.Item onClick={() => console.info('Deactivate')}>
-                    Deactivate
+                <Menu.Item onClick={() => {
+                }}>
+                    {'Do nothing'}
                 </Menu.Item>
-                <Menu.Item onClick={() => console.info('Delete')}>Delete</Menu.Item>
             </>
         ),
+        getRowId: (originalRow) => originalRow.uuid,
+        mantineTableBodyRowProps: ({row}) => ({
+            onClick: () => {window.parent.postMessage({type: 'openSlate', message: row.id}, 'http://local.dev.slatepages.com:3001');},
+            sx: {
+                cursor: 'pointer', //you might want to change the cursor too when adding an onClick
+            },
+        }),
     });
 
     return <MantineReactTable table={table}/>;
